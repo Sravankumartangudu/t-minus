@@ -141,7 +141,7 @@ struct AlertView: View {
             VStack {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("T-MINUS v1.0 // MEETING LAUNCH CONTROL").bold()
+                        Text("T-MINUS v\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?") // MEETING LAUNCH CONTROL").bold()
                         Text("UPLINK: ARMED  ·  PID \(ProcessInfo.processInfo.processIdentifier)")
                     }
                     Spacer()
