@@ -17,7 +17,7 @@ final class Settings {
         set { d.set(newValue.rawValue, forKey: "theme") }
     }
     var alertStyle: AlertStyle {
-        get { AlertStyle(rawValue: d.string(forKey: "alertStyle") ?? "") ?? .takeover }
+        get { AlertStyle(rawValue: d.string(forKey: "alertStyle") ?? "") ?? .portal }
         set { d.set(newValue.rawValue, forKey: "alertStyle") }
     }
     var sound: Bool {
@@ -75,8 +75,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         timer = t
 
         let args = CommandLine.arguments
-        if args.contains("--demo") || args.contains("--demo-flyby") {
-            let style: AlertStyle? = args.contains("--demo-flyby") ? .flyby : nil
+        // --demo uses the saved style; --demo-portal / --demo-takeover / --demo-flyby force one.
+        if let arg = args.first(where: { $0.hasPrefix("--demo") }) {
+            let style = AlertStyle(rawValue: String(arg.dropFirst("--demo-".count)))
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.fireTest(style: style) }
         }
     }

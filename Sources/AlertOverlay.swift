@@ -4,10 +4,11 @@ import SwiftUI
 enum OverlayAction { case join, snooze, dismiss }
 
 enum AlertStyle: String, CaseIterable {
-    case takeover, flyby
+    case portal, takeover, flyby
 
     var label: String {
         switch self {
+        case .portal: return "Portal (sparks + floating card)"
         case .takeover: return "Full takeover (incoming transmission)"
         case .flyby: return "Flyby (rocket tows a banner across)"
         }
@@ -196,6 +197,7 @@ final class OverlayController {
         switch style {
         case .takeover: view = AnyView(AlertView(meeting: meeting, theme: theme, leadSeconds: leadSeconds, onAction: finish))
         case .flyby: view = AnyView(FlybyView(meeting: meeting, theme: theme, onAction: finish))
+        case .portal: view = AnyView(PortalView(meeting: meeting, theme: theme, onAction: finish))
         }
         let host = NSHostingView(rootView: view)
         host.sizingOptions = []

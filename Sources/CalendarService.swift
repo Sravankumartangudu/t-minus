@@ -9,6 +9,7 @@ struct Meeting: Identifiable, Equatable {
     let link: URL?
     let calendar: String
     let attendees: Int
+    var people: [String] = []
 
     var provider: String {
         guard let host = link?.host else { return "NO UPLINK" }
@@ -32,7 +33,9 @@ struct Meeting: Identifiable, Equatable {
                 end: Date().addingTimeInterval(seconds + 1800),
                 link: URL(string: "https://meet.google.com/landing"),
                 calendar: "Simulation",
-                attendees: 9)
+                attendees: 9,
+                people: ["Ada Lovelace", "Linus Torvalds", "Grace Hopper", "Alan Turing", "Margaret Hamilton",
+                         "Dennis Ritchie", "Ken Thompson", "Barbara Liskov", "Tim Berners-Lee"])
     }
 }
 
@@ -85,7 +88,10 @@ final class CalendarService {
                            end: e.endDate,
                            link: LinkFinder.find(in: [e.url?.absoluteString, e.location, e.notes]),
                            calendar: e.calendar?.title ?? "Calendar",
-                           attendees: e.attendees?.count ?? 0)
+                           attendees: e.attendees?.count ?? 0,
+                           people: (e.attendees ?? []).map { p in
+                               p.name ?? p.url.absoluteString.replacingOccurrences(of: "mailto:", with: "")
+                           })
         }
         .sorted { $0.start < $1.start }
     }
