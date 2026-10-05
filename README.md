@@ -1,13 +1,18 @@
 # T-Minus — meeting launch control
 
 A macOS menu-bar app that makes sure you never miss a Google Meet. Shortly before each
-meeting, it takes over your screen with an animated "INCOMING TRANSMISSION" alert:
-falling glyphs, a glitching title, a decrypting meeting name, a countdown ring, and a
-fake terminal handshake log. Press Enter and you're in the meeting.
+meeting, it shows an animated alert in one of two styles:
+
+- **Full takeover:** an "INCOMING TRANSMISSION" screen with falling glyphs, a glitching
+  title, a decrypting meeting name, a countdown ring, and a fake terminal handshake log.
+- **Flyby:** a small pixel-art rocket tows a banner with the meeting details across your
+  screen. Click anywhere to close it, or click the banner to join.
+
+Press Enter and you're in the meeting.
 
 - Works with Google Meet, plus Zoom and Microsoft Teams links
 - Lives in the menu bar with a live countdown to your next meeting
-- Four themes, optional sound and voice announcement
+- Two alert styles, four themes, optional sound and voice announcement
 - Reads your calendar locally. No Google login, no servers, no tracking
 
 ---
@@ -92,8 +97,12 @@ one opens its meeting link.
 
 ### The alert
 
-By default the alert appears **2 minutes before** each meeting. It covers the screen your
-mouse is on and shows:
+By default the alert appears **2 minutes before** each meeting, on the screen your mouse
+is on. Choose the style under **Alert style** in the menu.
+
+### Style 1: Full takeover (default)
+
+The whole screen switches to an animated "INCOMING TRANSMISSION" display showing:
 
 - the meeting title, time, calendar, and number of attendees
 - a countdown ring (it flashes **LIVE +mm:ss** once the meeting has started)
@@ -108,10 +117,29 @@ mouse is on and shows:
 If a meeting has no video link, the JOIN button reads **ACKNOWLEDGE** and just closes the
 alert.
 
+### Style 2: Flyby
+
+A lighter alert. The screen dims slightly, and a pixel-art rocket flies from left to right
+towing a banner with:
+
+- the meeting title and a live countdown (`T-01:58`, or `● LIVE +00:12` once it starts)
+- the start and end time, the meeting service (Google Meet, Zoom, Teams), and the number of attendees
+
+The rocket keeps making passes, each at a slightly different height, until you react.
+
+| Action | Result |
+|---|---|
+| **Click the banner** (or press ⏎) | Joins the meeting and closes the alert |
+| **Click anywhere else** (or press Esc) | Closes the alert. You won't be reminded about this meeting again |
+| Press **S** | Hides the alert and shows it again in 1 minute |
+
+While the Flyby is showing, it catches all clicks, so click once to close it before going
+back to your work.
+
 ### Try it now
 
 Open the menu and choose **⚡ Fire test alert** (or press ⌘T while the menu is open). It
-shows a fake meeting so you can see the alert without waiting.
+shows a fake meeting in your current alert style, so you can see it without waiting.
 
 ---
 
@@ -121,8 +149,9 @@ All settings are in the menu-bar menu and are remembered between launches.
 
 | Setting | Default | What it does |
 |---|---|---|
+| Alert style | Full takeover | **Full takeover** (whole-screen transmission) or **Flyby** (rocket tows a banner across) |
 | Alert lead time | 2 min | How early the alert appears: 1, 2, 3, 5, or 10 minutes |
-| Theme | Matrix | Matrix (green), Synthwave (pink/cyan), Amber CRT (hex), ICE (binary blue) |
+| Theme | Matrix | Matrix (green), Synthwave (pink/cyan), Amber CRT (hex), ICE (binary blue). Applies to both alert styles |
 | Sound | On | Plays a sound when the alert appears |
 | Voice announcement | Off | Speaks "Incoming transmission. *Meeting* launches in 2 minutes." |
 | Only meetings with video links | On | Skips events without a Meet/Zoom/Teams link (lunch, focus time, etc.) |
@@ -202,7 +231,8 @@ cd t-minus
 | `./build.sh` | Builds `build/T-Minus.app` (universal: arm64 + x86_64) |
 | `./build.sh --install` | Builds, copies to `~/Applications`, and launches it |
 | `./build.sh --dist` | Builds and creates `build/T-Minus.zip` for sharing |
-| `open build/T-Minus.app --args --demo` | Launches and immediately shows a test alert |
+| `open build/T-Minus.app --args --demo` | Launches and immediately shows a test alert (current style) |
+| `open build/T-Minus.app --args --demo-flyby` | Launches and immediately shows a Flyby test alert |
 
 ### Project layout
 
@@ -211,7 +241,8 @@ Sources/
   main.swift             app entry point
   AppDelegate.swift      menu bar, scheduling, settings
   CalendarService.swift  reads events and finds meeting links
-  AlertOverlay.swift     full-screen alert window and layout
+  AlertOverlay.swift     alert window, alert styles, full-takeover layout
+  Flyby.swift            Flyby style: pixel rocket, banner, exhaust, glyph trail
   Effects.swift          glyph rain, glitch text, countdown ring, terminal log
   Theme.swift            color themes and glyph sets
 Info.plist               app metadata and calendar permission text

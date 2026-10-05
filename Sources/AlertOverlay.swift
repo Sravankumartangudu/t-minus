@@ -3,6 +3,17 @@ import SwiftUI
 
 enum OverlayAction { case join, snooze, dismiss }
 
+enum AlertStyle: String, CaseIterable {
+    case takeover, flyby
+
+    var label: String {
+        switch self {
+        case .takeover: return "Full takeover (incoming transmission)"
+        case .flyby: return "Flyby (rocket tows a banner across)"
+        }
+    }
+}
+
 enum TerminalScript {
     private static let banter: [(String, String, String)] = [
         ("[WARN]", "coffee level", "CRITICALLY LOW"),
@@ -163,7 +174,8 @@ final class OverlayController {
     private var window: OverlayWindow?
     var isShowing: Bool { window != nil }
 
-    func show(_ meeting: Meeting, theme: Theme, leadSeconds: Double, onAction: @escaping (OverlayAction) -> Void) {
+    func show(_ meeting: Meeting, style: AlertStyle, theme: Theme, leadSeconds: Double,
+              onAction: @escaping (OverlayAction) -> Void) {
         close()
         let mouse = NSEvent.mouseLocation
         guard let screen = NSScreen.screens.first(where: { NSMouseInRect(mouse, $0.frame, false) }) ?? NSScreen.main else { return }
@@ -176,9 +188,14 @@ final class OverlayController {
         w.isReleasedWhenClosed = false
         w.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
 
-        let view = AlertView(meeting: meeting, theme: theme, leadSeconds: leadSeconds) { [weak self] action in
+        let finish: (OverlayAction) -> Void = { [weak self] action in
             self?.close()
             onAction(action)
+        }
+        let view: AnyView
+        switch style {
+        case .takeover: view = AnyView(AlertView(meeting: meeting, theme: theme, leadSeconds: leadSeconds, onAction: finish))
+        case .flyby: view = AnyView(FlybyView(meeting: meeting, theme: theme, onAction: finish))
         }
         let host = NSHostingView(rootView: view)
         host.sizingOptions = []

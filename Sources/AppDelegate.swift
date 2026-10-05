@@ -16,6 +16,10 @@ final class Settings {
         get { Theme(rawValue: d.string(forKey: "theme") ?? "") ?? .matrix }
         set { d.set(newValue.rawValue, forKey: "theme") }
     }
+    var alertStyle: AlertStyle {
+        get { AlertStyle(rawValue: d.string(forKey: "alertStyle") ?? "") ?? .takeover }
+        set { d.set(newValue.rawValue, forKey: "alertStyle") }
+    }
     var sound: Bool {
         get { d.object(forKey: "sound") as? Bool ?? true }
         set { d.set(newValue, forKey: "sound") }
@@ -70,8 +74,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         RunLoop.main.add(t, forMode: .common)
         timer = t
 
-        if CommandLine.arguments.contains("--demo") {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.fireTest() }
+        let args = CommandLine.arguments
+        if args.contains("--demo") || args.contains("--demo-flyby") {
+            let style: AlertStyle? = args.contains("--demo-flyby") ? .flyby : nil
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.fireTest(style: style) }
         }
     }
 
@@ -106,14 +112,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
-    private func present(_ m: Meeting) {
+    private func present(_ m: Meeting, style: AlertStyle? = nil) {
         if settings.sound { NSSound(named: "Submarine")?.play() }
         if settings.voice {
             let mins = Int((m.start.timeIntervalSinceNow / 60).rounded())
             let when = mins <= 0 ? "is live now" : "launches in \(mins) minute\(mins == 1 ? "" : "s")"
             synth.speak(AVSpeechUtterance(string: "Incoming transmission. \(m.title) \(when)."))
         }
-        overlay.show(m, theme: settings.theme, leadSeconds: Double(max(1, settings.leadMinutes) * 60)) { [weak self] action in
+        overlay.show(m, style: style ?? settings.alertStyle, theme: settings.theme, leadSeconds: Double(max(1, settings.leadMinutes) * 60)) { [weak self] action in
             self?.handle(action, for: m)
         }
     }
@@ -190,7 +196,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
 
         menu.addItem(.separator())
-        menu.addItem(item("⚡ Fire test alert", #selector(fireTest), key: "t"))
+        menu.addItem(item("⚡ Fire test alert", #selector(fireTestFromMenu), key: "t"))
+
+        let styleMenu = NSMenu()
+        for st in AlertStyle.allCases {
+            let mi = item(st.label, #selector(setStyle(_:)))
+            mi.representedObject = st.rawValue
+            mi.state = settings.alertStyle == st ? .on : .off
+            styleMenu.addItem(mi)
+        }
+        menu.addItem(submenu("Alert style", styleMenu))
 
         let leadMenu = NSMenu()
         for n in [1, 2, 3, 5, 10] {
@@ -250,11 +265,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if let url = sender.representedObject as? URL { NSWorkspace.shared.open(url) }
     }
 
-    @objc private func fireTest() {
+    @objc private func fireTestFromMenu() { fireTest() }
+
+    private func fireTest(style: AlertStyle? = nil) {
         let m = Meeting.demo(startingIn: Double(settings.leadMinutes * 60))
         demo = m
         alerted.insert(m.id)
-        present(m)
+        present(m, style: style)
+    }
+
+    @objc private func setStyle(_ sender: NSMenuItem) {
+        if let raw = sender.representedObject as? String, let st = AlertStyle(rawValue: raw) { settings.alertStyle = st }
     }
 
     @objc private func setLead(_ sender: NSMenuItem) { settings.leadMinutes = sender.tag }
