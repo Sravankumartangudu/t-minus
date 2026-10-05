@@ -75,7 +75,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         timer = t
 
         let args = CommandLine.arguments
-        // --demo uses the saved style; --demo-portal / --demo-takeover / --demo-flyby force one.
+        // --demo uses the saved style; --demo-<style> (e.g. --demo-portal, --demo-webslinger) forces one.
         if let arg = args.first(where: { $0.hasPrefix("--demo") }) {
             let style = AlertStyle(rawValue: String(arg.dropFirst("--demo-".count)))
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.fireTest(style: style) }
@@ -201,6 +201,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         let styleMenu = NSMenu()
         for st in AlertStyle.allCases {
+            if st == AlertStyle.heroes.first {
+                styleMenu.addItem(.separator())
+                styleMenu.addItem(disabled("Superhero styles"))
+            }
             let mi = item(st.label, #selector(setStyle(_:)))
             mi.representedObject = st.rawValue
             mi.state = settings.alertStyle == st ? .on : .off

@@ -5,12 +5,23 @@ enum OverlayAction { case join, snooze, dismiss }
 
 enum AlertStyle: String, CaseIterable {
     case portal, takeover, flyby
+    case webslinger, arcreactor, thundergod, nightsignal, gammasmash, starshield, heroroulette
+
+    /// The superhero styles that Hero roulette picks from.
+    static let heroes: [AlertStyle] = [.webslinger, .arcreactor, .thundergod, .nightsignal, .gammasmash, .starshield]
 
     var label: String {
         switch self {
         case .portal: return "Portal (sparks + floating card)"
         case .takeover: return "Full takeover (incoming transmission)"
         case .flyby: return "Flyby (rocket tows a banner across)"
+        case .webslinger: return "🕸 Web Slinger (card swings in on a web)"
+        case .arcreactor: return "🔴 Arc Reactor (armor HUD target lock)"
+        case .thundergod: return "⚡ Thunder God (lightning slams it down)"
+        case .nightsignal: return "🔦 Night Signal (searchlight in the sky)"
+        case .gammasmash: return "💥 Gamma Smash (card cracks your screen)"
+        case .starshield: return "🛡 Star Shield (ricocheting shield)"
+        case .heroroulette: return "🎲 Hero roulette (random hero each time)"
         }
     }
 }
@@ -193,11 +204,18 @@ final class OverlayController {
             self?.close()
             onAction(action)
         }
+        let style = style == .heroroulette ? AlertStyle.heroes.randomElement()! : style
         let view: AnyView
         switch style {
         case .takeover: view = AnyView(AlertView(meeting: meeting, theme: theme, leadSeconds: leadSeconds, onAction: finish))
         case .flyby: view = AnyView(FlybyView(meeting: meeting, theme: theme, onAction: finish))
         case .portal: view = AnyView(PortalView(meeting: meeting, theme: theme, onAction: finish))
+        case .webslinger: view = AnyView(WebSlingerView(meeting: meeting, onAction: finish))
+        case .arcreactor: view = AnyView(ArcReactorView(meeting: meeting, onAction: finish))
+        case .thundergod: view = AnyView(ThunderGodView(meeting: meeting, onAction: finish))
+        case .nightsignal: view = AnyView(NightSignalView(meeting: meeting, onAction: finish))
+        case .gammasmash: view = AnyView(GammaSmashView(meeting: meeting, onAction: finish))
+        case .starshield, .heroroulette: view = AnyView(StarShieldView(meeting: meeting, onAction: finish))
         }
         let host = NSHostingView(rootView: view)
         host.sizingOptions = []

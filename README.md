@@ -1,7 +1,7 @@
 # T-Minus — meeting launch control
 
 A macOS menu-bar app that makes sure you never miss a Google Meet. Shortly before each
-meeting, it shows an animated alert in one of three styles:
+meeting, it shows an animated alert. There are three core styles plus six superhero styles:
 
 - **Portal (default):** a glowing ring of light swirls open and throws off sparks, and a
   floating card flips out of it with a rolling countdown and attendee avatars. Joining ends
@@ -10,12 +10,16 @@ meeting, it shows an animated alert in one of three styles:
   title, a decrypting meeting name, a countdown ring, and a fake terminal handshake log.
 - **Flyby:** a small pixel-art rocket tows a banner with the meeting details across your
   screen. Click anywhere to close it, or click the banner to join.
+- **Superhero styles:** six alerts inspired by famous comic-book heroes, such as a card that
+  swings in on a web, an armor HUD that locks onto your meeting, lightning that slams it
+  down, and a searchlight in the night sky. There's also **Hero roulette**, which picks one
+  at random each time. [See all of them](#superhero-styles).
 
 Press Enter and you're in the meeting.
 
 - Works with Google Meet, plus Zoom and Microsoft Teams links
 - Lives in the menu bar with a live countdown to your next meeting
-- Three alert styles, four themes, optional sound and voice announcement
+- Nine alert styles (plus Hero roulette), four themes, optional sound and voice announcement
 - Reads your calendar locally. No Google login, no servers, no tracking
 
 ---
@@ -157,6 +161,34 @@ The rocket keeps making passes, each at a slightly different height, until you r
 While the Flyby is showing, it catches all clicks, so click once to close it before going
 back to your work.
 
+### Superhero styles
+
+Choose one under **Alert style → Superhero styles**. All of them show the same meeting card
+(rolling countdown, title, time, attendees, and **Join now** / **Snooze 1m** / **Dismiss**)
+and use the same controls as Portal:
+
+| Action | Result |
+|---|---|
+| **Join now** (or press ⏎) | Joins the meeting, with a hero-specific exit |
+| **Snooze 1m** (or press S) | Hides the alert and shows it again in 1 minute |
+| **Dismiss**, **click anywhere outside the card**, or press Esc | Closes the alert. You won't be reminded about this meeting again |
+
+| Style | Inspired by | What happens |
+|---|---|---|
+| 🕸 **Web Slinger** | the wall-crawling web-slinger | Webs spin out from the screen corners and the card swings in on a web line like a pendulum (with a "THWIP!"). Joining zips it up and away; dismissing snaps the line and the card drops. |
+| 🔴 **Arc Reactor** | the genius in the armored suit | An armor heads-up display boots up: holographic rings, a reticle that slides in and shows **TARGET LOCKED** on your meeting, and suit telemetry typing out on both sides. The card flickers in like a hologram. |
+| ⚡ **Thunder God** | the hammer-wielding god of thunder | Storm clouds and rain roll in, a lightning bolt slams the card down with a screen shake and a shockwave, and lightning keeps striking while static crackles around the card's edges. Joining calls down one last bolt. |
+| 🔦 **Night Signal** | the caped detective | The screen turns into a night skyline with lit windows. A searchlight sweeps up and projects your countdown onto the clouds, and the card rises out of the city. Dismissing switches the light off. |
+| 💥 **Gamma Smash** | the big green rage monster | The card is hurled at your screen, the "glass" cracks, shards fly, and a comic **SMASH!** burst pops up. Joining punches the card through the screen. |
+| 🛡 **Star Shield** | the star-spangled super-soldier | A spinning round shield ricochets off the screen edges with sparks, lands, and the card unfolds beneath it. Joining throws the shield off-screen. |
+| 🎲 **Hero roulette** | all of the above | Picks a random superhero style for each alert. |
+
+Superhero styles use their own hero colors, so the **Theme** setting doesn't affect them.
+
+> These styles are fan homages. They use original artwork and generic names, contain no
+> official logos or characters, and T-Minus isn't affiliated with or endorsed by any comic
+> publisher or studio.
+
 ### Try it now
 
 Open the menu and choose **⚡ Fire test alert** (or press ⌘T while the menu is open). It
@@ -170,9 +202,9 @@ All settings are in the menu-bar menu and are remembered between launches.
 
 | Setting | Default | What it does |
 |---|---|---|
-| Alert style | Portal | **Portal** (sparks + floating card), **Full takeover** (whole-screen transmission), or **Flyby** (rocket tows a banner across) |
+| Alert style | Portal | **Portal** (sparks + floating card), **Full takeover** (whole-screen transmission), **Flyby** (rocket tows a banner across), one of the six [superhero styles](#superhero-styles), or **Hero roulette** (random hero each time) |
 | Alert lead time | 2 min | How early the alert appears: 1, 2, 3, 5, or 10 minutes |
-| Theme | Matrix | Matrix (green), Synthwave (pink/cyan), Amber CRT (hex), ICE (binary blue). Applies to all alert styles |
+| Theme | Matrix | Matrix (green), Synthwave (pink/cyan), Amber CRT (hex), ICE (binary blue). Applies to Portal, Full takeover, and Flyby (superhero styles use their own colors) |
 | Sound | On | Plays a sound when the alert appears |
 | Voice announcement | Off | Speaks "Incoming transmission. *Meeting* launches in 2 minutes." |
 | Only meetings with video links | On | Skips events without a Meet/Zoom/Teams link (lunch, focus time, etc.) |
@@ -253,7 +285,7 @@ cd t-minus
 | `./build.sh --install` | Builds, copies to `~/Applications`, and launches it |
 | `./build.sh --dist` | Builds and creates `build/T-Minus.zip` for sharing |
 | `open build/T-Minus.app --args --demo` | Launches and immediately shows a test alert (current style) |
-| `open build/T-Minus.app --args --demo-portal` | Same, forcing the Portal style (also `--demo-takeover`, `--demo-flyby`) |
+| `open build/T-Minus.app --args --demo-portal` | Same, forcing a style: `--demo-portal`, `--demo-takeover`, `--demo-flyby`, `--demo-webslinger`, `--demo-arcreactor`, `--demo-thundergod`, `--demo-nightsignal`, `--demo-gammasmash`, `--demo-starshield`, `--demo-heroroulette` |
 
 ### Project layout
 
@@ -263,7 +295,15 @@ Sources/
   AppDelegate.swift      menu bar, scheduling, settings
   CalendarService.swift  reads events and finds meeting links
   AlertOverlay.swift     alert window, alert styles, full-takeover layout
-  Portal.swift           Portal style: swirling ring, sparks, floating card, confetti
+  Portal.swift           Portal style: swirling ring, sparks, confetti
+  MeetingCard.swift      floating meeting card shared by Portal and the superhero styles
+  HeroStage.swift        shared shell for superhero styles (timeline, click-outside, keys) + helpers
+  WebSlinger.swift       🕸 corner webs, swinging card
+  ArcReactor.swift       🔴 HUD rings, target-lock reticle, telemetry
+  ThunderGod.swift       ⚡ storm clouds, rain, lightning, shockwave
+  NightSignal.swift      🔦 skyline, searchlights, projected countdown
+  GammaSmash.swift       💥 cracked glass, flying shards, SMASH! burst
+  StarShield.swift       🛡 ricocheting shield, sparks
   Flyby.swift            Flyby style: pixel rocket, banner, exhaust, glyph trail
   Effects.swift          glyph rain, glitch text, countdown ring, terminal log
   Theme.swift            color themes and glyph sets
