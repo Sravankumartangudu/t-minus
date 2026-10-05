@@ -13,6 +13,14 @@ struct MeetingCard: View {
     let onSnooze: () -> Void
     let onDismiss: () -> Void
 
+    private var liveLabel: String {
+        switch meeting.kind {
+        case .meeting: return "LIVE NOW"
+        case .reminder: return "DUE NOW"
+        case .timer: return "TIME'S UP"
+        }
+    }
+
     private static let clock: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "h:mm a"
@@ -30,7 +38,7 @@ struct MeetingCard: View {
                 HStack(spacing: 6) {
                     Circle().fill(live ? Color.red : primary).frame(width: 8, height: 8)
                         .opacity(live && Int(t * 2) % 2 == 0 ? 0.3 : 1)
-                    Text(live ? "LIVE NOW" : kicker)
+                    Text(live ? liveLabel : kicker)
                         .font(.system(size: 12, weight: .bold, design: .rounded)).tracking(2)
                         .foregroundColor(live ? .red : primary)
                         .lineLimit(1)

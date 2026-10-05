@@ -1,3 +1,5 @@
+<img src="Icon/AppIcon.png" alt="T-Minus icon" width="128" align="right">
+
 # T-Minus — meeting launch control
 
 A macOS menu-bar app that makes sure you never miss a Google Meet. Shortly before each
@@ -17,10 +19,15 @@ meeting, it shows an animated alert. There are three core styles plus six superh
 
 Press Enter and you're in the meeting.
 
+It isn't only for meetings. T-Minus can also alert you for **any calendar event** (lunch,
+gym, school pickup), **Apple Reminders** with a due time, and **quick timers** you start from
+the menu ("remind me in 25 min"). See [Not just meetings](#not-just-meetings).
+
 - Works with Google Meet, plus Zoom and Microsoft Teams links
 - Lives in the menu bar with a live countdown to your next meeting
+- Also works for any calendar event, Apple Reminders, and quick timers
 - Nine alert styles (plus Hero roulette), four themes, optional sound and voice announcement
-- Reads your calendar locally. No Google login, no servers, no tracking
+- Reads your calendar and reminders locally. No Google login, no servers, no tracking
 
 ---
 
@@ -30,11 +37,12 @@ Press Enter and you're in the meeting.
 2. [Install](#install)
 3. [Connect your Google Calendar](#connect-your-google-calendar)
 4. [How to use](#how-to-use)
-5. [Settings](#settings)
-6. [Troubleshooting](#troubleshooting)
-7. [Update or uninstall](#update-or-uninstall)
-8. [Privacy](#privacy)
-9. [Build from source](#build-from-source)
+5. [Not just meetings](#not-just-meetings): any calendar event, Apple Reminders, quick timers
+6. [Settings](#settings)
+7. [Troubleshooting](#troubleshooting)
+8. [Update or uninstall](#update-or-uninstall)
+9. [Privacy](#privacy)
+10. [Build from source](#build-from-source)
 
 ---
 
@@ -45,7 +53,7 @@ Press Enter and you're in the meeting.
 | macOS | 14 (Sonoma) or later. Check under  → About This Mac. |
 | Mac | Apple Silicon (M1–M4) or Intel. Both are supported. |
 | Calendar | Your Google Calendar synced into the macOS **Calendar** app (see below). |
-| Permission | Calendar access for T-Minus (macOS asks on first launch). |
+| Permission | Calendar access for T-Minus (macOS asks on first launch). Reminders access only if you turn on **Include Apple Reminders**. |
 
 Work-managed Macs: some company security tools block apps that aren't signed by an
 identified developer. If "Open Anyway" doesn't appear in step 3 below, ask your IT team to
@@ -94,13 +102,13 @@ created with "Add Google Meet video conferencing" include the link automatically
 
 | What you see | Meaning |
 |---|---|
-| `◎ T-∞` | No video meetings in the next hour |
-| `◉ 12m · Standup` | Next meeting and minutes until it starts |
+| `◎ T-∞` | Nothing coming up in the next hour |
+| `◉ 12m · Standup` | Next meeting (or reminder or timer) and minutes until it starts |
 | `◉ 0:42 · Standup` (blinking) | Less than a minute to go |
 | `● LIVE · Standup` | A meeting is in progress |
 
 Click it to open the menu. Upcoming meetings are listed with their start time, and clicking
-one opens its meeting link.
+one opens its meeting link. Reminders are tagged `☑ reminder` and quick timers `⏱ timer`.
 
 ### The alert
 
@@ -196,6 +204,58 @@ shows a fake meeting in your current alert style, so you can see it without wait
 
 ---
 
+## Not just meetings
+
+Out of the box, T-Minus only alerts for meetings with a video link. You can use it for any
+kind of reminder in three ways. All of them use your chosen alert style, sound, and voice.
+
+### 1. Any calendar event: turn off "Only meetings with video links"
+
+By default, **Only meetings with video links** is **on**, so events without a Google Meet,
+Zoom, or Teams link (like "Lunch" or "Gym") are ignored. To get alerts for every timed event
+on your calendar:
+
+1. Click T-Minus in the menu bar.
+2. Click **Only meetings with video links** to remove the checkmark.
+
+Now every timed event in the Calendar app gets an alert, using the same lead time as meetings.
+Examples: "Lunch", "Gym", "Pick up kids", "Take medicine", "Deploy freeze starts". If an
+event has no video link, the alert's Join button says **Got it** (or **ACKNOWLEDGE** in Full
+takeover) and just closes the alert.
+
+Turning this off also shows those events in the menu list. All-day, cancelled, and declined
+events are still skipped. Turn the checkmark back on any time to go back to meetings only.
+
+### 2. Apple Reminders
+
+1. Click T-Minus in the menu bar and turn on **Include Apple Reminders**.
+2. The first time, macOS asks for Reminders access. Click **Allow**.
+
+Any incomplete reminder in the Reminders app that's due **at a specific time** in the next 18
+hours now triggers an alert **when it's due**, not ahead of time. The card shows **DUE NOW**.
+Reminders that only have a date (no time) are skipped, like all-day events. Reminders from
+iCloud or any account synced to the Reminders app are included.
+
+This works whether or not "Only meetings with video links" is on. T-Minus only *reads*
+reminders: pressing **Got it** closes the alert but doesn't tick the reminder off.
+
+### 3. Quick timers
+
+For one-off reminders with no calendar entry, open the menu and choose **⏱ Quick timer**:
+
+| Menu item | What it does |
+|---|---|
+| **New timer with a label…** | Asks what it's for (e.g. "Stretch break") and how many minutes, then starts it |
+| **In 5 / 10 / 15 / 25 / 30 / 45 / 60 min** | Starts an unlabelled timer immediately, e.g. "25-min timer" (Pomodoro) |
+| **✕ Cancel "…" (12m left)** | Shown for each running timer. Cancels it |
+
+When the time is up, your alert style appears with **TIME'S UP**. Snooze gives you one more
+minute. Running timers appear in the menu bar countdown and the menu list. They're saved,
+so they survive quitting and reopening T-Minus. A timer that went off while T-Minus wasn't
+running is discarded after 5 minutes.
+
+---
+
 ## Settings
 
 All settings are in the menu-bar menu and are remembered between launches.
@@ -206,8 +266,10 @@ All settings are in the menu-bar menu and are remembered between launches.
 | Alert lead time | 2 min | How early the alert appears: 1, 2, 3, 5, or 10 minutes |
 | Theme | Matrix | Matrix (green), Synthwave (pink/cyan), Amber CRT (hex), ICE (binary blue). Applies to Portal, Full takeover, and Flyby (superhero styles use their own colors) |
 | Sound | On | Plays a sound when the alert appears |
-| Voice announcement | Off | Speaks "Incoming transmission. *Meeting* launches in 2 minutes." |
-| Only meetings with video links | On | Skips events without a Meet/Zoom/Teams link (lunch, focus time, etc.) |
+| Voice announcement | Off | Speaks "Incoming transmission. *Meeting* launches in 2 minutes." (or "Reminder. *…* is due now." / "Time's up. *…*.") |
+| Only meetings with video links | On | Skips calendar events without a Meet/Zoom/Teams link. Turn it off to get alerts for every timed event ([details](#1-any-calendar-event-turn-off-only-meetings-with-video-links)) |
+| Include Apple Reminders | Off | Alerts when a reminder with a due time is due ([details](#2-apple-reminders)) |
+| ⏱ Quick timer | — | Starts a one-off countdown alert ([details](#3-quick-timers)) |
 | Launch at login | Off | Starts T-Minus automatically when you log in |
 | Refresh calendars (⌘R) | — | Re-reads your calendar immediately (it also refreshes every minute and on calendar changes) |
 
@@ -231,6 +293,16 @@ T-Minus. Then quit and reopen the app.
 - If a meeting has no Meet/Zoom/Teams link, it's hidden while
   "Only meetings with video links" is on. Turn that off to see all events.
 - Choose **Refresh calendars** from the menu.
+
+**My reminders don't trigger alerts.**
+- Make sure **Include Apple Reminders** is checked in the menu.
+- If the menu shows "Reminders access denied", click it, or go to **System Settings →
+  Privacy & Security → Reminders**, and turn on T-Minus.
+- The reminder needs a due **time**, not just a date, and must not be completed.
+
+**Events like "Lunch" or "Gym" don't trigger alerts.**
+Turn off **Only meetings with video links** in the menu. See
+[Not just meetings](#1-any-calendar-event-turn-off-only-meetings-with-video-links).
 
 **macOS says the app is damaged or can't be opened.**
 Run `xattr -dr com.apple.quarantine /Applications/T-Minus.app` in Terminal, then open it again.
@@ -262,7 +334,9 @@ and replace the app in Applications. Your settings are kept.
 
 ## Privacy
 
-T-Minus reads your calendar on your Mac through Apple's EventKit. It doesn't
+T-Minus reads your calendar (and, if you turn it on, your reminders) on your Mac through
+Apple's EventKit. It never changes or deletes them. Quick timers are stored only in the
+app's local settings. It doesn't
 connect to Google, doesn't send data anywhere, and doesn't collect analytics. The only
 network activity is your browser opening a meeting link when you press JOIN.
 
@@ -293,7 +367,8 @@ cd t-minus
 Sources/
   main.swift             app entry point
   AppDelegate.swift      menu bar, scheduling, settings
-  CalendarService.swift  reads events and finds meeting links
+  CalendarService.swift  reads events and reminders, finds meeting links
+  QuickTimers.swift      quick timers: storage and the "new timer" dialog
   AlertOverlay.swift     alert window, alert styles, full-takeover layout
   Portal.swift           Portal style: swirling ring, sparks, confetti
   MeetingCard.swift      floating meeting card shared by Portal and the superhero styles
@@ -307,6 +382,10 @@ Sources/
   Flyby.swift            Flyby style: pixel rocket, banner, exhaust, glyph trail
   Effects.swift          glyph rain, glitch text, countdown ring, terminal log
   Theme.swift            color themes and glyph sets
+Icon/
+  make_icon.swift        draws the app icon; run `swift Icon/make_icon.swift` after changing it
+  AppIcon.icns           generated icon bundled into the app
+  AppIcon.png            1024px preview (used in this README)
 Info.plist               app metadata and calendar permission text
 build.sh                 build, install, and packaging script
 ```

@@ -32,6 +32,10 @@ final class Settings {
         get { d.object(forKey: "videoOnly") as? Bool ?? true }
         set { d.set(newValue, forKey: "videoOnly") }
     }
+    var reminders: Bool {
+        get { d.object(forKey: "reminders") as? Bool ?? false }
+        set { d.set(newValue, forKey: "reminders") }
+    }
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
@@ -43,6 +47,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var timer: Timer?
 
     private var meetings: [Meeting] = []
+    private var reminders: [Meeting] = []
+    private let timers = QuickTimers()
+    private var remindersDenied = false
     private var demo: Meeting?
     private var alerted = Set<String>()
     private var handled = Set<String>()
@@ -51,8 +58,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var accessDenied = false
 
     private var relevant: [Meeting] {
-        let base = settings.videoOnly ? meetings.filter { $0.link != nil } : meetings
-        return (base + [demo].compactMap { $0 }).sorted { $0.start < $1.start }
+        // The video-link filter only applies to calendar events; reminders and timers always count.
+        let events = settings.videoOnly ? meetings.filter { $0.link != nil } : meetings
+        let extras = (settings.reminders ? reminders : []) + timers.meetings
+        return (events + extras + [demo].compactMap { $0 }).sorted { $0.start < $1.start }
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -66,6 +75,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             self?.accessDenied = !ok
             self?.refresh()
         }
+        if settings.reminders { enableReminders() }
         NotificationCenter.default.addObserver(forName: .EKEventStoreChanged, object: cal.store, queue: .main) { [weak self] _ in
             self?.refresh()
         }
@@ -87,6 +97,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func refresh() {
         meetings = cal.upcoming()
         lastRefresh = Date()
+        if settings.reminders {
+            cal.upcomingReminders { [weak self] list in
+                self?.reminders = list
+                self?.updateTitle()
+            }
+        }
         updateTitle()
     }
 
@@ -96,8 +112,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         guard !overlay.isShowing else { return }
 
         let now = Date()
-        let lead = Double(settings.leadMinutes * 60)
         for m in relevant where !handled.contains(m.id) {
+            // Meetings warn ahead of time; reminders and timers fire when they're due.
+            let lead = m.kind == .meeting ? Double(settings.leadMinutes * 60) : 0
             if let until = snoozed[m.id] {
                 if now >= until {
                     snoozed[m.id] = nil
@@ -117,8 +134,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if settings.sound { NSSound(named: "Submarine")?.play() }
         if settings.voice {
             let mins = Int((m.start.timeIntervalSinceNow / 60).rounded())
-            let when = mins <= 0 ? "is live now" : "launches in \(mins) minute\(mins == 1 ? "" : "s")"
-            synth.speak(AVSpeechUtterance(string: "Incoming transmission. \(m.title) \(when)."))
+            let plural = mins == 1 ? "" : "s"
+            let line: String
+            switch m.kind {
+            case .meeting:
+                line = "Incoming transmission. \(m.title) " + (mins <= 0 ? "is live now." : "launches in \(mins) minute\(plural).")
+            case .reminder:
+                line = "Reminder. \(m.title) " + (mins <= 0 ? "is due now." : "is due in \(mins) minute\(plural).")
+            case .timer:
+                line = "Time's up. \(m.title)."
+            }
+            synth.speak(AVSpeechUtterance(string: line))
         }
         overlay.show(m, style: style ?? settings.alertStyle, theme: settings.theme, leadSeconds: Double(max(1, settings.leadMinutes) * 60)) { [weak self] action in
             self?.handle(action, for: m)
@@ -137,6 +163,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             handled.insert(m.id)
         }
         if m.id == demo?.id, action != .snooze { demo = nil }
+        if m.kind == .timer, action != .snooze { timers.remove(m.id) }
     }
 
     // MARK: - Menu bar
@@ -179,6 +206,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if accessDenied {
             menu.addItem(item("⚠ Calendar access denied — open Privacy settings", #selector(openPrivacy)))
         }
+        if remindersDenied && settings.reminders {
+            menu.addItem(item("⚠ Reminders access denied — open Privacy settings", #selector(openRemindersPrivacy)))
+        }
 
         let now = Date()
         let upcoming = relevant.filter { $0.end > now }.prefix(12)
@@ -190,7 +220,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         later.dateFormat = "EEE HH:mm"
         for m in upcoming {
             let when = m.start <= now ? "LIVE " : (Calendar.current.isDateInToday(m.start) ? today : later).string(from: m.start)
-            let tag = m.link == nil ? "" : "  ⟶ \(m.provider.lowercased())"
+            let tag: String
+            switch m.kind {
+            case .timer: tag = "  ⏱ timer"
+            case .reminder: tag = "  ☑ reminder"
+            case .meeting: tag = m.link == nil ? "" : "  ⟶ \(m.provider.lowercased())"
+            }
             let mi = item("\(when)  \(truncate(m.title, 36))\(tag)", m.link == nil ? nil : #selector(joinFromMenu(_:)))
             mi.representedObject = m.link
             menu.addItem(mi)
@@ -198,6 +233,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         menu.addItem(.separator())
         menu.addItem(item("⚡ Fire test alert", #selector(fireTestFromMenu), key: "t"))
+
+        let timerMenu = NSMenu()
+        timerMenu.addItem(item("New timer with a label…", #selector(newCustomTimer)))
+        timerMenu.addItem(.separator())
+        for n in [5, 10, 15, 25, 30, 45, 60] {
+            let mi = item("In \(n) min", #selector(newPresetTimer(_:)))
+            mi.tag = n
+            timerMenu.addItem(mi)
+        }
+        if !timers.items.isEmpty {
+            timerMenu.addItem(.separator())
+            timerMenu.addItem(disabled("Running"))
+            for t in timers.items {
+                let left = max(0, Int(t.due.timeIntervalSince(now) / 60 + 1))
+                let mi = item("✕ Cancel “\(truncate(t.title, 28))” (\(left)m left)", #selector(cancelTimer(_:)))
+                mi.representedObject = t.id
+                timerMenu.addItem(mi)
+            }
+        }
+        menu.addItem(submenu("⏱ Quick timer", timerMenu))
 
         let styleMenu = NSMenu()
         for st in AlertStyle.allCases {
@@ -233,6 +288,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(toggle("Sound", settings.sound, #selector(toggleSound)))
         menu.addItem(toggle("Voice announcement", settings.voice, #selector(toggleVoice)))
         menu.addItem(toggle("Only meetings with video links", settings.videoOnly, #selector(toggleVideoOnly)))
+        menu.addItem(toggle("Include Apple Reminders", settings.reminders, #selector(toggleReminders)))
         menu.addItem(toggle("Launch at login", SMAppService.mainApp.status == .enabled, #selector(toggleLogin)))
 
         menu.addItem(.separator())
@@ -294,6 +350,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func toggleVoice() { settings.voice.toggle() }
     @objc private func toggleVideoOnly() { settings.videoOnly.toggle() }
     @objc private func manualRefresh() { refresh() }
+
+    @objc private func toggleReminders() {
+        settings.reminders.toggle()
+        if settings.reminders { enableReminders() } else { reminders = []; updateTitle() }
+    }
+
+    private func enableReminders() {
+        cal.requestRemindersAccess { [weak self] ok in
+            self?.remindersDenied = !ok
+            self?.refresh()
+        }
+    }
+
+    @objc private func newPresetTimer(_ sender: NSMenuItem) {
+        timers.add(minutes: sender.tag, title: "\(sender.tag)-min timer")
+        updateTitle()
+    }
+
+    @objc private func newCustomTimer() {
+        guard let (title, minutes) = QuickTimers.prompt() else { return }
+        timers.add(minutes: minutes, title: title)
+        updateTitle()
+    }
+
+    @objc private func cancelTimer(_ sender: NSMenuItem) {
+        if let id = sender.representedObject as? String { timers.remove(id) }
+        updateTitle()
+    }
+
+    @objc private func openRemindersPrivacy() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Reminders") {
+            NSWorkspace.shared.open(url)
+        }
+    }
 
     @objc private func toggleLogin() {
         do {

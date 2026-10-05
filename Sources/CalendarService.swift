@@ -10,8 +10,13 @@ struct Meeting: Identifiable, Equatable {
     let calendar: String
     let attendees: Int
     var people: [String] = []
+    var kind: Kind = .meeting
+
+    enum Kind { case meeting, reminder, timer }
 
     var provider: String {
+        if kind == .reminder { return "REMINDER" }
+        if kind == .timer { return "QUICK TIMER" }
         guard let host = link?.host else { return "NO UPLINK" }
         if host.contains("meet.google") { return "GOOGLE MEET" }
         if host.contains("zoom") { return "ZOOM" }
@@ -68,6 +73,40 @@ final class CalendarService {
         if status == .fullAccess { return done(true) }
         store.requestFullAccessToEvents { ok, _ in
             DispatchQueue.main.async { done(ok) }
+        }
+    }
+
+    var remindersStatus: EKAuthorizationStatus { EKEventStore.authorizationStatus(for: .reminder) }
+
+    func requestRemindersAccess(_ done: @escaping (Bool) -> Void) {
+        if remindersStatus == .fullAccess { return done(true) }
+        store.requestFullAccessToReminders { ok, _ in
+            DispatchQueue.main.async { done(ok) }
+        }
+    }
+
+    /// Incomplete Apple Reminders that are due at a specific time in the window.
+    /// Reminders with only a due date (no time) are skipped, like all-day events.
+    func upcomingReminders(hours: Double = 18, _ done: @escaping ([Meeting]) -> Void) {
+        guard remindersStatus == .fullAccess else { return done([]) }
+        let now = Date()
+        let pred = store.predicateForIncompleteReminders(withDueDateStarting: now.addingTimeInterval(-3600),
+                                                         ending: now.addingTimeInterval(hours * 3600),
+                                                         calendars: nil)
+        store.fetchReminders(matching: pred) { items in
+            let list = (items ?? []).compactMap { r -> Meeting? in
+                guard let comps = r.dueDateComponents, comps.hour != nil,
+                      let due = Calendar.current.date(from: comps) else { return nil }
+                return Meeting(id: "rem-\(r.calendarItemIdentifier)@\(Int(due.timeIntervalSince1970))",
+                               title: r.title?.isEmpty == false ? r.title! : "(untitled)",
+                               start: due,
+                               end: due.addingTimeInterval(900),
+                               link: LinkFinder.find(in: [r.url?.absoluteString, r.location, r.notes]),
+                               calendar: r.calendar?.title ?? "Reminders",
+                               attendees: 0,
+                               kind: .reminder)
+            }
+            DispatchQueue.main.async { done(list) }
         }
     }
 
