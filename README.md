@@ -51,7 +51,7 @@ the menu ("remind me in 25 min"). See [Not just meetings](#not-just-meetings).
 | Requirement | Details |
 |---|---|
 | macOS | 14 (Sonoma) or later. Check under  → About This Mac. |
-| Mac | Apple Silicon (M1–M4) or Intel. Both are supported. |
+| Mac | Apple Silicon (any M-series chip) or Intel. Both are supported. |
 | Calendar | Your Google Calendar synced into the macOS **Calendar** app (see below). |
 | Permission | Calendar access for T-Minus (macOS asks on first launch). Reminders access only if you turn on **Include Apple Reminders**. |
 
@@ -63,11 +63,19 @@ allow the app.
 
 ## Install
 
-1. Go to the [Releases page](../../releases/latest) and download **T-Minus.zip**.
-2. Unzip it (double-click the zip) and drag **T-Minus.app** into your **Applications** folder.
-3. Double-click **T-Minus.app**. The first time, macOS will block it with a message that it
-   "can't be opened" or is from an unidentified developer. This is expected, because the app
-   isn't notarized by Apple. To allow it:
+1. Go to the [Releases page](../../releases/latest) and download **T-Minus.dmg**.
+2. Double-click **T-Minus.dmg**. A window opens: drag the **T-Minus** icon onto the
+   **Applications** folder next to it. Then eject the **T-Minus** disk in Finder's sidebar
+   (or drag it to the Trash). You can delete the .dmg afterwards.
+
+   Prefer a zip? **T-Minus.zip** on the same page has the same app: unzip it and drag
+   **T-Minus.app** into **Applications**.
+3. Open **T-Minus** from your Applications folder (or Spotlight: ⌘Space, type "T-Minus").
+   Don't open it from the disk image window, or it will run from the disk instead of your Mac.
+
+   The first time, macOS will block it with a message that it "can't be opened" or is from an
+   unidentified developer. This is expected, because the app isn't notarized by Apple. To
+   allow it:
    - Open **System Settings → Privacy & Security**.
    - Scroll down to the message about T-Minus and click **Open Anyway**, then confirm.
 
@@ -105,7 +113,7 @@ created with "Add Google Meet video conferencing" include the link automatically
 | `◎ T-∞` | Nothing coming up in the next hour |
 | `◉ 12m · Standup` | Next meeting (or reminder or timer) and minutes until it starts |
 | `◉ 0:42 · Standup` (blinking) | Less than a minute to go |
-| `● LIVE · Standup` | A meeting is in progress |
+| `● LIVE · Standup` | A meeting is in progress (or a reminder or timer just went off) |
 
 Click it to open the menu. Upcoming meetings are listed with their start time, and clicking
 one opens its meeting link. Reminders are tagged `☑ reminder` and quick timers `⏱ timer`.
@@ -200,7 +208,8 @@ Superhero styles use their own hero colors, so the **Theme** setting doesn't aff
 ### Try it now
 
 Open the menu and choose **⚡ Fire test alert** (or press ⌘T while the menu is open). It
-shows a fake meeting in your current alert style, so you can see it without waiting.
+shows a fake meeting in your current alert style, so you can see it without waiting. It does
+nothing while another alert is already on screen.
 
 ---
 
@@ -251,8 +260,12 @@ For one-off reminders with no calendar entry, open the menu and choose **⏱ Qui
 
 When the time is up, your alert style appears with **TIME'S UP**. Snooze gives you one more
 minute. Running timers appear in the menu bar countdown and the menu list. They're saved,
-so they survive quitting and reopening T-Minus. A timer that went off while T-Minus wasn't
-running is discarded after 5 minutes.
+so they survive quitting and reopening T-Minus. If your Mac was asleep when a timer ended,
+the alert appears as soon as it wakes. A timer that ended while T-Minus wasn't running is
+discarded if you reopen the app more than 5 minutes later.
+
+If you type something that isn't a whole number of minutes (like "1h" or "0"), the dialog
+stays open and asks again. The longest timer is 1440 minutes (24 hours).
 
 ---
 
@@ -307,20 +320,27 @@ Turn off **Only meetings with video links** in the menu. See
 **macOS says the app is damaged or can't be opened.**
 Run `xattr -dr com.apple.quarantine /Applications/T-Minus.app` in Terminal, then open it again.
 
-**The alert didn't appear for a meeting.**
-Alerts fire within the lead time and up to 5 minutes after the start. If T-Minus wasn't
-running then, or you dismissed the alert earlier, it won't show again. Turn on
-**Launch at login** so it's always running.
+**The alert didn't appear.**
+A meeting alert can appear from the lead time until 5 minutes after the start. A reminder
+can alert up to 1 hour late, and a quick timer always alerts, even if the Mac was asleep.
+After that, or if you dismissed it earlier, it won't show again. Only one alert shows at a
+time, so the next one waits until you close the current one or the "New timer" dialog.
+Turn on **Launch at login** so T-Minus is always running.
 
 **Launch at login doesn't stick.**
-Make sure the app is in your Applications folder, not running from Downloads or the zip.
+Make sure the app is in your Applications folder, not running from Downloads, the zip, or the
+T-Minus disk image.
+
+**The T-Minus disk won't eject ("in use").**
+T-Minus was opened from the disk image instead of Applications. Quit it from its menu, eject
+the disk, then open T-Minus from your Applications folder.
 
 ---
 
 ## Update or uninstall
 
-**Update:** download the new **T-Minus.zip** from Releases, quit T-Minus (menu → Quit),
-and replace the app in Applications. Your settings are kept.
+**Update:** quit T-Minus (menu → Quit), download the new **T-Minus.dmg** from Releases, and
+drag T-Minus onto Applications again. Choose **Replace** when asked. Your settings are kept.
 
 **Uninstall:**
 1. Turn off **Launch at login** in the menu, then choose **Quit T-Minus**.
@@ -336,9 +356,9 @@ and replace the app in Applications. Your settings are kept.
 
 T-Minus reads your calendar (and, if you turn it on, your reminders) on your Mac through
 Apple's EventKit. It never changes or deletes them. Quick timers are stored only in the
-app's local settings. It doesn't
-connect to Google, doesn't send data anywhere, and doesn't collect analytics. The only
-network activity is your browser opening a meeting link when you press JOIN.
+app's local settings. It doesn't connect to Google, doesn't send data anywhere, and doesn't
+collect analytics. The only network activity is your browser opening a meeting link when you
+press JOIN.
 
 ---
 
@@ -357,7 +377,7 @@ cd t-minus
 |---|---|
 | `./build.sh` | Builds `build/T-Minus.app` (universal: arm64 + x86_64) |
 | `./build.sh --install` | Builds, copies to `~/Applications`, and launches it |
-| `./build.sh --dist` | Builds and creates `build/T-Minus.zip` for sharing |
+| `./build.sh --dist` | Builds and creates `build/T-Minus.dmg` (drag-to-install disk image) and `build/T-Minus.zip` for sharing |
 | `open build/T-Minus.app --args --demo` | Launches and immediately shows a test alert (current style) |
 | `open build/T-Minus.app --args --demo-portal` | Same, forcing a style: `--demo-portal`, `--demo-takeover`, `--demo-flyby`, `--demo-webslinger`, `--demo-arcreactor`, `--demo-thundergod`, `--demo-nightsignal`, `--demo-gammasmash`, `--demo-starshield`, `--demo-heroroulette` |
 
@@ -386,6 +406,7 @@ Icon/
   make_icon.swift        draws the app icon; run `swift Icon/make_icon.swift` after changing it
   AppIcon.icns           generated icon bundled into the app
   AppIcon.png            1024px preview (used in this README)
-Info.plist               app metadata and calendar permission text
+  make_dmg_background.swift  draws the installer window background (build.sh --dist runs it)
+Info.plist               app metadata, icon, and calendar/reminders permission text
 build.sh                 build, install, and packaging script
 ```

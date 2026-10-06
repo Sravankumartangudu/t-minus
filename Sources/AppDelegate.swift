@@ -49,7 +49,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var meetings: [Meeting] = []
     private var reminders: [Meeting] = []
     private let timers = QuickTimers()
-    private var remindersDenied = false
+    // Read live so the warning clears once access is granted in System Settings.
+    private var remindersDenied: Bool { ![.fullAccess, .notDetermined].contains(cal.remindersStatus) }
     private var demo: Meeting?
     private var alerted = Set<String>()
     private var handled = Set<String>()
@@ -109,12 +110,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func tick() {
         if Date().timeIntervalSince(lastRefresh) > 60 { refresh() }
         updateTitle()
-        guard !overlay.isShowing else { return }
+        // Wait while an alert is up or a dialog (e.g. "New timer…") is open: a modal session
+        // would swallow clicks on the overlay.
+        guard !overlay.isShowing, NSApp.modalWindow == nil else { return }
 
         let now = Date()
         for m in relevant where !handled.contains(m.id) {
             // Meetings warn ahead of time; reminders and timers fire when they're due.
             let lead = m.kind == .meeting ? Double(settings.leadMinutes * 60) : 0
+            // How late an alert may still fire (e.g. after the Mac wakes from sleep). A meeting
+            // is pointless after 5 minutes, but a timer should always say "time's up".
+            let grace: Double
+            switch m.kind {
+            case .meeting: grace = 300
+            case .reminder: grace = 3600
+            case .timer: grace = .infinity
+            }
             if let until = snoozed[m.id] {
                 if now >= until {
                     snoozed[m.id] = nil
@@ -123,7 +134,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 continue
             }
             let remaining = m.start.timeIntervalSince(now)
-            if !alerted.contains(m.id), remaining <= lead, remaining > -300 {
+            if !alerted.contains(m.id), remaining <= lead, remaining > -grace {
                 alerted.insert(m.id)
                 return present(m)
             }
@@ -329,6 +340,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func fireTestFromMenu() { fireTest() }
 
     private func fireTest(style: AlertStyle? = nil) {
+        // Don't replace a real alert: it would close without its Join/Snooze/Dismiss handling.
+        guard !overlay.isShowing else { return }
         let m = Meeting.demo(startingIn: Double(settings.leadMinutes * 60))
         demo = m
         alerted.insert(m.id)
@@ -357,10 +370,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func enableReminders() {
-        cal.requestRemindersAccess { [weak self] ok in
-            self?.remindersDenied = !ok
-            self?.refresh()
-        }
+        cal.requestRemindersAccess { [weak self] _ in self?.refresh() }
     }
 
     @objc private func newPresetTimer(_ sender: NSMenuItem) {

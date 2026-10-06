@@ -42,30 +42,41 @@ final class QuickTimers {
         if let data = try? JSONEncoder().encode(items) { UserDefaults.standard.set(data, forKey: key) }
     }
 
-    /// Asks for a label and duration. Returns nil if cancelled or the duration is invalid.
+    /// Asks for a label and duration. Re-asks until the minutes are valid; nil if cancelled.
     static func prompt() -> (title: String, minutes: Int)? {
+        var title = "", minutes = "25", error: String?
+        while true {
+            guard let r = ask(title: title, minutes: minutes, error: error) else { return nil }
+            (title, minutes) = (r.title, r.minutes)
+            if let m = Int(minutes.trimmingCharacters(in: .whitespaces)), m > 0, m <= 24 * 60 {
+                let t = title.trimmingCharacters(in: .whitespacesAndNewlines)
+                return (t.isEmpty ? "\(m)-min timer" : t, m)
+            }
+            error = "“\(minutes)” isn't valid. Enter whole minutes from 1 to 1440 (24 hours)."
+        }
+    }
+
+    private static func ask(title: String, minutes: String, error: String?) -> (title: String, minutes: String)? {
         let alert = NSAlert()
         alert.messageText = "New quick timer"
-        alert.informativeText = "T-Minus will show your alert style when the time is up."
+        alert.informativeText = error ?? "T-Minus will show your alert style when the time is up."
 
         let label = NSTextField(frame: NSRect(x: 0, y: 32, width: 260, height: 24))
         label.placeholderString = "What's it for? (e.g. Stretch break)"
-        let minutes = NSTextField(frame: NSRect(x: 0, y: 0, width: 80, height: 24))
-        minutes.stringValue = "25"
+        label.stringValue = title
+        let mins = NSTextField(frame: NSRect(x: 0, y: 0, width: 80, height: 24))
+        mins.stringValue = minutes
         let unit = NSTextField(labelWithString: "minutes")
         unit.frame = NSRect(x: 88, y: 3, width: 100, height: 18)
         let box = NSView(frame: NSRect(x: 0, y: 0, width: 260, height: 56))
-        [label, minutes, unit].forEach(box.addSubview)
+        [label, mins, unit].forEach(box.addSubview)
         alert.accessoryView = box
         alert.addButton(withTitle: "Start")
         alert.addButton(withTitle: "Cancel")
-        alert.window.initialFirstResponder = label
+        alert.window.initialFirstResponder = error == nil ? label : mins
 
         NSApp.activate()
-        guard alert.runModal() == .alertFirstButtonReturn,
-              let m = Int(minutes.stringValue.trimmingCharacters(in: .whitespaces)), m > 0, m <= 24 * 60
-        else { return nil }
-        let title = label.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        return (title.isEmpty ? "\(m)-min timer" : title, m)
+        guard alert.runModal() == .alertFirstButtonReturn else { return nil }
+        return (label.stringValue, mins.stringValue)
     }
 }

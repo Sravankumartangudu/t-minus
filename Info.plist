@@ -2,35 +2,35 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>CFBundleIdentifier</key>
-    <string>com.stangudu.tminus</string>
-    <key>CFBundleName</key>
-    <string>T-Minus</string>
-    <key>CFBundleDisplayName</key>
-    <string>T-Minus</string>
-    <key>CFBundleExecutable</key>
-    <string>TMinus</string>
-    <key>CFBundleIconFile</key>
-    <string>AppIcon</string>
-    <key>CFBundlePackageType</key>
-    <string>APPL</string>
-    <key>CFBundleShortVersionString</key>
-    <string>1.4</string>
-    <key>CFBundleVersion</key>
-    <string>5</string>
-    <key>LSMinimumSystemVersion</key>
-    <string>14.0</string>
-    <key>LSUIElement</key>
-    <true/>
-    <key>NSHighResolutionCapable</key>
-    <true/>
-    <key>NSCalendarsFullAccessUsageDescription</key>
-    <string>T-Minus reads your calendar so it can warn you before a meeting launches.</string>
-    <key>NSCalendarsUsageDescription</key>
-    <string>T-Minus reads your calendar so it can warn you before a meeting launches.</string>
-    <key>NSRemindersFullAccessUsageDescription</key>
-    <string>T-Minus reads your reminders so it can alert you when one is due. It never changes them.</string>
-    <key>NSRemindersUsageDescription</key>
-    <string>T-Minus reads your reminders so it can alert you when one is due. It never changes them.</string>
+	<key>CFBundleDisplayName</key>
+	<string>T-Minus</string>
+	<key>CFBundleExecutable</key>
+	<string>TMinus</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.stangudu.tminus</string>
+	<key>CFBundleName</key>
+	<string>T-Minus</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.4.1</string>
+	<key>CFBundleVersion</key>
+	<string>6</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>14.0</string>
+	<key>LSUIElement</key>
+	<true/>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>T-Minus reads your calendar so it can warn you before a meeting launches.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>T-Minus reads your calendar so it can warn you before a meeting launches.</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSRemindersFullAccessUsageDescription</key>
+	<string>T-Minus reads your reminders so it can alert you when one is due. It never changes them.</string>
+	<key>NSRemindersUsageDescription</key>
+	<string>T-Minus reads your reminders so it can alert you when one is due. It never changes them.</string>
 </dict>
 </plist>
