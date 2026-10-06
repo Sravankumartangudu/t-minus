@@ -43,6 +43,7 @@ the menu ("remind me in 25 min"). See [Not just meetings](#not-just-meetings).
 8. [Update or uninstall](#update-or-uninstall)
 9. [Privacy](#privacy)
 10. [Build from source](#build-from-source)
+11. [License](#license)
 
 ---
 
@@ -409,4 +410,14 @@ Icon/
   make_dmg_background.swift  draws the installer window background (build.sh --dist runs it)
 Info.plist               app metadata, icon, and calendar/reminders permission text
 build.sh                 build, install, and packaging script
+LICENSE                  MIT license
 ```
+
+---
+
+## License
+
+[MIT](LICENSE) © 2026 Sravankumartangudu. You're free to use, change, and share it. The
+superhero styles are fan homages: the license covers T-Minus's own code and artwork, not the
+heroes that inspired them, which belong to their owners (see the
+[note under Superhero styles](#superhero-styles)).
