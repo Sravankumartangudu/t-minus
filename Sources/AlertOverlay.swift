@@ -197,6 +197,8 @@ final class OverlayController {
         w.isOpaque = false
         w.backgroundColor = .clear
         w.hasShadow = false
+        // Alerts are designed for a dark stage; keep them identical in every Appearance mode.
+        w.appearance = NSAppearance(named: .darkAqua)
         w.isReleasedWhenClosed = false
         w.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
 

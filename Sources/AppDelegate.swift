@@ -36,6 +36,19 @@ final class Settings {
         get { d.object(forKey: "reminders") as? Bool ?? false }
         set { d.set(newValue, forKey: "reminders") }
     }
+    /// "system" (follow macOS), "light" or "dark". Affects menus and dialogs only;
+    /// the alert overlays keep their own fixed look.
+    var appearance: String {
+        get { d.string(forKey: "appearance") ?? "system" }
+        set { d.set(newValue, forKey: "appearance"); applyAppearance() }
+    }
+    func applyAppearance() {
+        switch appearance {
+        case "light": NSApp.appearance = NSAppearance(named: .aqua)
+        case "dark": NSApp.appearance = NSAppearance(named: .darkAqua)
+        default: NSApp.appearance = nil
+        }
+    }
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
@@ -66,6 +79,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        settings.applyAppearance()
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         let menu = NSMenu()
         menu.delegate = self
@@ -296,6 +310,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         menu.addItem(submenu("Theme", themeMenu))
 
+        let appearanceMenu = NSMenu()
+        for (raw, label) in [("system", "System"), ("light", "Light"), ("dark", "Dark")] {
+            let mi = item(label, #selector(setAppearance(_:)))
+            mi.representedObject = raw
+            mi.state = settings.appearance == raw ? .on : .off
+            appearanceMenu.addItem(mi)
+        }
+        menu.addItem(submenu("Appearance", appearanceMenu))
+
         menu.addItem(toggle("Sound", settings.sound, #selector(toggleSound)))
         menu.addItem(toggle("Voice announcement", settings.voice, #selector(toggleVoice)))
         menu.addItem(toggle("Only meetings with video links", settings.videoOnly, #selector(toggleVideoOnly)))
@@ -357,6 +380,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc private func setTheme(_ sender: NSMenuItem) {
         if let raw = sender.representedObject as? String, let th = Theme(rawValue: raw) { settings.theme = th }
         updateTitle()
+    }
+
+    @objc private func setAppearance(_ sender: NSMenuItem) {
+        if let raw = sender.representedObject as? String { settings.appearance = raw }
     }
 
     @objc private func toggleSound() { settings.sound.toggle() }

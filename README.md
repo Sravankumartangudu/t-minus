@@ -279,6 +279,7 @@ All settings are in the menu-bar menu and are remembered between launches.
 | Alert style | Portal | **Portal** (sparks + floating card), **Full takeover** (whole-screen transmission), **Flyby** (rocket tows a banner across), one of the six [superhero styles](#superhero-styles), or **Hero roulette** (random hero each time) |
 | Alert lead time | 2 min | How early the alert appears: 1, 2, 3, 5, or 10 minutes |
 | Theme | Matrix | Matrix (green), Synthwave (pink/cyan), Amber CRT (hex), ICE (binary blue). Applies to Portal, Full takeover, and Flyby (superhero styles use their own colors) |
+| Appearance | System | System, Light or Dark for the menu and dialogs. The alerts look the same in every mode |
 | Sound | On | Plays a sound when the alert appears |
 | Voice announcement | Off | Speaks "Incoming transmission. *Meeting* launches in 2 minutes." (or "Reminder. *…* is due now." / "Time's up. *…*.") |
 | Only meetings with video links | On | Skips calendar events without a Meet/Zoom/Teams link. Turn it off to get alerts for every timed event ([details](#1-any-calendar-event-turn-off-only-meetings-with-video-links)) |
