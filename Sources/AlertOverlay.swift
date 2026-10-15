@@ -95,7 +95,7 @@ struct AlertView: View {
                         DecryptText(text: meeting.title, t: t - 0.3, theme: theme)
                         Text(meeting.subtitle)
                             .font(.mono(15)).tracking(1)
-                            .foregroundColor(.white.opacity(0.65))
+                            .foregroundColor(.white.opacity(0.85))
                         HStack(spacing: 80) {
                             CountdownRing(remaining: remaining, lead: leadSeconds, t: t, theme: theme)
                             TerminalLog(lines: log, t: t, theme: theme)
@@ -185,6 +185,7 @@ final class OverlayWindow: NSWindow {
 final class OverlayController {
     private var window: OverlayWindow?
     var isShowing: Bool { window != nil }
+    var windowNumber: Int? { window?.windowNumber }
 
     func show(_ meeting: Meeting, style: AlertStyle, theme: Theme, leadSeconds: Double,
               onAction: @escaping (OverlayAction) -> Void) {

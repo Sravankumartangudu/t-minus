@@ -115,7 +115,8 @@ struct DecryptText: View {
             .multilineTextAlignment(.center)
             .lineLimit(2)
             .minimumScaleFactor(0.5)
-            .shadow(color: theme.primary.opacity(0.9), radius: 16)
+            .shadow(color: .black.opacity(0.9), radius: 2, y: 2)
+            .shadow(color: theme.primary.opacity(0.55), radius: 18)
             .frame(maxWidth: 1150)
     }
 

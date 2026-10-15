@@ -101,9 +101,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         let args = CommandLine.arguments
         // --demo uses the saved style; --demo-<style> (e.g. --demo-portal, --demo-webslinger) forces one.
-        if let arg = args.first(where: { $0.hasPrefix("--demo") }) {
+        if let arg = args.first(where: { $0.hasPrefix("--demo") && !$0.hasPrefix("--demo=") }) {
             let style = AlertStyle(rawValue: String(arg.dropFirst("--demo-".count)))
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.fireTest(style: style) }
+            // --shot=<file.png> (docs): capture just the alert window after it settles, then quit.
+            if let shot = args.first(where: { $0.hasPrefix("--shot=") }) {
+                let path = String(shot.dropFirst("--shot=".count))
+                DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                    if let n = self.overlay.windowNumber {
+                        let p = Process()
+                        p.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
+                        p.arguments = ["-x", "-o", "-l", "\(n)", path]
+                        try? p.run(); p.waitUntilExit()
+                    }
+                    NSApp.terminate(nil)
+                }
+            }
         }
     }
 
@@ -279,6 +292,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         menu.addItem(submenu("⏱ Quick timer", timerMenu))
 
+        // All preferences live under one Settings submenu, grouped by what they affect.
+        let prefs = NSMenu()
+        prefs.addItem(sectionHeader("Alerts"))
+
         let styleMenu = NSMenu()
         for st in AlertStyle.allCases {
             if st == AlertStyle.heroes.first {
@@ -290,16 +307,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             mi.state = settings.alertStyle == st ? .on : .off
             styleMenu.addItem(mi)
         }
-        menu.addItem(submenu("Alert style", styleMenu))
-
-        let leadMenu = NSMenu()
-        for n in [1, 2, 3, 5, 10] {
-            let mi = item("\(n) min before", #selector(setLead(_:)))
-            mi.tag = n
-            mi.state = settings.leadMinutes == n ? .on : .off
-            leadMenu.addItem(mi)
-        }
-        menu.addItem(submenu("Alert lead time", leadMenu))
+        prefs.addItem(submenu("Alert style", styleMenu))
 
         let themeMenu = NSMenu()
         for th in Theme.allCases {
@@ -308,8 +316,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             mi.state = settings.theme == th ? .on : .off
             themeMenu.addItem(mi)
         }
-        menu.addItem(submenu("Theme", themeMenu))
+        prefs.addItem(submenu("Alert colors", themeMenu))
 
+        let leadMenu = NSMenu()
+        for n in [1, 2, 3, 5, 10] {
+            let mi = item("\(n) min before", #selector(setLead(_:)))
+            mi.tag = n
+            mi.state = settings.leadMinutes == n ? .on : .off
+            leadMenu.addItem(mi)
+        }
+        prefs.addItem(submenu("Alert lead time", leadMenu))
+        prefs.addItem(toggle("Sound", settings.sound, #selector(toggleSound)))
+        prefs.addItem(toggle("Voice announcement", settings.voice, #selector(toggleVoice)))
+
+        prefs.addItem(.separator())
+        prefs.addItem(sectionHeader("What to alert for"))
+        prefs.addItem(toggle("Only meetings with video links", settings.videoOnly, #selector(toggleVideoOnly)))
+        prefs.addItem(toggle("Include Apple Reminders", settings.reminders, #selector(toggleReminders)))
+
+        prefs.addItem(.separator())
+        prefs.addItem(sectionHeader("App"))
         let appearanceMenu = NSMenu()
         for (raw, label) in [("system", "System"), ("light", "Light"), ("dark", "Dark")] {
             let mi = item(label, #selector(setAppearance(_:)))
@@ -317,13 +343,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             mi.state = settings.appearance == raw ? .on : .off
             appearanceMenu.addItem(mi)
         }
-        menu.addItem(submenu("Appearance", appearanceMenu))
-
-        menu.addItem(toggle("Sound", settings.sound, #selector(toggleSound)))
-        menu.addItem(toggle("Voice announcement", settings.voice, #selector(toggleVoice)))
-        menu.addItem(toggle("Only meetings with video links", settings.videoOnly, #selector(toggleVideoOnly)))
-        menu.addItem(toggle("Include Apple Reminders", settings.reminders, #selector(toggleReminders)))
-        menu.addItem(toggle("Launch at login", SMAppService.mainApp.status == .enabled, #selector(toggleLogin)))
+        prefs.addItem(submenu("Appearance (menu and dialogs)", appearanceMenu))
+        prefs.addItem(toggle("Launch at login", SMAppService.mainApp.status == .enabled, #selector(toggleLogin)))
+        menu.addItem(submenu("⚙ Settings", prefs))
 
         menu.addItem(.separator())
         menu.addItem(item("Refresh calendars", #selector(manualRefresh), key: "r"))
@@ -338,6 +360,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func disabled(_ title: String) -> NSMenuItem {
         let mi = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+        mi.isEnabled = false
+        return mi
+    }
+
+    private func sectionHeader(_ title: String) -> NSMenuItem {
+        let mi = NSMenuItem(title: title.uppercased(), action: nil, keyEquivalent: "")
+        mi.attributedTitle = NSAttributedString(string: title.uppercased(), attributes: [
+            .font: NSFont.systemFont(ofSize: 10, weight: .semibold),
+            .foregroundColor: NSColor.secondaryLabelColor,
+            .kern: 0.8,
+        ])
         mi.isEnabled = false
         return mi
     }

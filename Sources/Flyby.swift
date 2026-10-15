@@ -112,13 +112,15 @@ private struct Convoy: View {
             .foregroundColor(theme.primary)
 
             Text(meeting.title)
-                .font(.mono(20, .heavy))
+                .font(.mono(22, .heavy))
                 .foregroundColor(.white)
                 .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .shadow(color: .black.opacity(0.85), radius: 2, y: 1)
 
             Text("\(f.string(from: meeting.start))–\(f.string(from: meeting.end))  ·  \(meeting.provider)  ·  \(crew)")
                 .font(.mono(11))
-                .foregroundColor(.white.opacity(0.65))
+                .foregroundColor(.white.opacity(0.85))
                 .lineLimit(1)
 
             Text(meeting.link == nil ? "click me to ACK  ·  click anywhere to dismiss" : "click me to JOIN  ·  click anywhere to dismiss")

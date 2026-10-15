@@ -122,7 +122,7 @@ one opens its meeting link. Reminders are tagged `☑ reminder` and quick timers
 ### The alert
 
 By default the alert appears **2 minutes before** each meeting, on the screen your mouse
-is on. Choose the style under **Alert style** in the menu.
+is on. Choose the style under **Settings → Alert style** in the menu.
 
 ### Style 1: Portal (default)
 
@@ -200,11 +200,26 @@ and use the same controls as Portal:
 | 🛡 **Star Shield** | the star-spangled super-soldier | A spinning round shield ricochets off the screen edges with sparks, lands, and the card unfolds beneath it. Joining throws the shield off-screen. |
 | 🎲 **Hero roulette** | all of the above | Picks a random superhero style for each alert. |
 
-Superhero styles use their own hero colors, so the **Theme** setting doesn't affect them.
+Superhero styles use their own hero colors, so the **Alert colors** setting doesn't affect them.
 
 > These styles are fan homages. They use original artwork and generic names, contain no
 > official logos or characters, and T-Minus isn't affiliated with or endorsed by any comic
 > publisher or studio.
+
+### Screenshots
+
+Captured from the built-in test alert (fake meeting, no real calendar data).
+
+| Portal | Full takeover |
+|---|---|
+| ![Portal alert](docs/screenshots/portal.png) | ![Full takeover alert](docs/screenshots/takeover.png) |
+
+| Flyby | Arc Reactor (superhero style) |
+|---|---|
+| ![Flyby alert](docs/screenshots/flyby.png) | ![Arc Reactor alert](docs/screenshots/arcreactor.png) |
+
+To regenerate them: `build/T-Minus.app/Contents/MacOS/TMinus --demo-portal --shot=docs/screenshots/portal.png`
+(any style name works; it captures only the alert window, then quits).
 
 ### Try it now
 
@@ -272,14 +287,14 @@ stays open and asks again. The longest timer is 1440 minutes (24 hours).
 
 ## Settings
 
-All settings are in the menu-bar menu and are remembered between launches.
+All settings are under **⚙ Settings** in the menu-bar menu, grouped into **Alerts**, **What to alert for** and **App**, and are remembered between launches.
 
 | Setting | Default | What it does |
 |---|---|---|
 | Alert style | Portal | **Portal** (sparks + floating card), **Full takeover** (whole-screen transmission), **Flyby** (rocket tows a banner across), one of the six [superhero styles](#superhero-styles), or **Hero roulette** (random hero each time) |
 | Alert lead time | 2 min | How early the alert appears: 1, 2, 3, 5, or 10 minutes |
-| Theme | Matrix | Matrix (green), Synthwave (pink/cyan), Amber CRT (hex), ICE (binary blue). Applies to Portal, Full takeover, and Flyby (superhero styles use their own colors) |
-| Appearance | System | System, Light or Dark for the menu and dialogs. The alerts look the same in every mode |
+| Alert colors | Matrix | Matrix (green), Synthwave (pink/cyan), Amber CRT (hex), ICE (binary blue). Applies to Portal, Full takeover, and Flyby (superhero styles use their own colors) |
+| Appearance (menu and dialogs) | System | System, Light or Dark for the menu and dialogs. The alerts look the same in every mode |
 | Sound | On | Plays a sound when the alert appears |
 | Voice announcement | Off | Speaks "Incoming transmission. *Meeting* launches in 2 minutes." (or "Reminder. *…* is due now." / "Time's up. *…*.") |
 | Only meetings with video links | On | Skips calendar events without a Meet/Zoom/Teams link. Turn it off to get alerts for every timed event ([details](#1-any-calendar-event-turn-off-only-meetings-with-video-links)) |

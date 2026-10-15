@@ -62,12 +62,15 @@ struct MeetingCard: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(meeting.title)
-                    .font(.system(size: 26, weight: .bold, design: .rounded))
+                    .font(.system(size: 30, weight: .heavy, design: .rounded))
                     .foregroundColor(.white)
                     .lineLimit(2)
+                    .minimumScaleFactor(0.8)
+                    .shadow(color: .black.opacity(0.85), radius: 2, y: 1)
+                    .shadow(color: .black.opacity(0.5), radius: 8)
                 Text("\(f.string(from: meeting.start)) – \(f.string(from: meeting.end))  ·  \(meeting.calendar)")
                     .font(.system(size: 13, weight: .medium, design: .rounded))
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(.white.opacity(0.8))
             }
 
             Avatars(people: meeting.people, total: meeting.attendees, primary: primary, accent: accent)
@@ -117,7 +120,7 @@ private struct Avatars: View {
             if shown.isEmpty {
                 Text("Just you this time")
                     .font(.system(size: 13, weight: .medium, design: .rounded))
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(.white.opacity(0.8))
             } else {
                 HStack(spacing: -9) {
                     ForEach(Array(shown.enumerated()), id: \.offset) { i, name in
@@ -140,7 +143,7 @@ private struct Avatars: View {
                 }
                 Text("\(max(total, people.count)) joining")
                     .font(.system(size: 13, weight: .medium, design: .rounded))
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(.white.opacity(0.8))
             }
         }
     }
