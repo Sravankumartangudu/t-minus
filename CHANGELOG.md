@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.1 - 2026-10-15
+
+- **Sharper small icons.** At 16–64 px the app icon's drop shadow filled the whole image, leaving a faint grey
+  square behind it in Finder lists, Spotlight and the menu. Every size is now shrunk from the full-size drawing,
+  so the shadow keeps its proportions and the corners stay clear. The icon itself is unchanged.
+
 ## 1.6.0 - 2026-10-15
 
 - The menu is tidier: every preference now lives under one **⚙ Settings** submenu, grouped into **Alerts** (Alert style, Alert colors, Alert lead time, Sound, Voice), **What to alert for** (video links only, Reminders) and **App** (Appearance, Launch at login). Saved preferences are unchanged.
